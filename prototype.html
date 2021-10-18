@@ -1,0 +1,755 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+     <head>
+          <meta charset="UTF-8">
+          <title> Prototype </title>
+          <script src="hie_converter.js"></script>
+          <style>
+          textarea{
+               clear:both;
+               width: 100%;
+               height: 12em;
+               background: ivory;
+               overflow:hidden;
+               }
+          .someOutputBox{
+               background: ivory;
+               float:left;
+               clear: both;
+               padding: 1em;
+               width: 92%;
+               margin-top: 2em;
+               }
+          #hieOutput{
+               font-weight: bold;
+			margin-bottom: 2em;
+               }
+
+          .innerOutput {
+               border-top: solid 1px;
+               padding-top: 1em;
+               }
+
+          
+          .letter{
+               height: .9em;
+               max-width: 1em;
+               margin: 0;
+               padding: 0;
+               }
+
+          legend{
+               font-size: large;
+               font-weight: bold;
+               background: tan;
+               padding: .25em;
+               border: solid 1px;
+               }
+          fieldset{
+               }
+
+
+          #alphabets, th, td {
+               border: solid 1px;
+               border-collapse: collapse;
+               padding: 3px;
+               }
+          #alphabets{
+               float:left;
+               width:100%;
+               }
+
+          tr:nth-child(even) {
+               background-color: ivory;
+               }
+          tr:nth-child(odd) {
+               background-color: tan;
+               }
+          audio { width: 3em; }
+
+          .boxWide{
+               width: 95%;
+               border:solid 1px;
+               float:left;
+               padding: 1em;
+               background: orange;
+               }
+          .box{
+               width: 46%;
+               border:solid 1px;
+               float:left;
+               padding: 1em;
+               background: orange;
+               }
+		#aeaOutput{
+			display: none;
+			}
+          </style>
+     </head>
+     <body>
+
+          <div class="boxWide">
+               <h1>HIE Prototype - Oct</h1>
+               <p>
+                    Use this tool to convert from the <cite>Archaic English Alphabet</cite> to the <cite>Holeman Improved English</cite> alphabet. In a future version it will also be able to execute the full conversion of spellings, and not just a direct transliteration.
+               </p>
+          </div>
+		<div class="box">
+			
+               <h2>A2H Transliterator</h2>
+<textarea id="aeaInput" oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"'>
+	Ww, Rr, Tt, Yy, Pp
+	Ss, Dd, Ff, Gg, Hh, Jj, Kk, Ll
+	Zz, Vv, Bb, Nn, Mm
+
+	--
+	Chch,  SHsh, THth, NGng PHph
+	--
+	aa`a~, ee`, ii`, oo`, uu`
+	AA`A~, EE`, II`, OO`, UU`
+	--
+	Ss Cc Qq Xx
+	--
+	
+</textarea>
+<!--			FULL TEST SET:
+Ww, Rr, Tt, Yy, Pp
+Ss, Dd, Ff, Gg, Hh, Jj, Kk, Ll
+Zz, Vv, Bb, Nn, Mm
+
+--
+Chch,  SHsh, THth, NGng PHph
+--
+aa`a~, ee`, ii`, oo`, uu`
+AA`A~, EE`, II`, OO`, UU`
+
+------
+0123456789
+~!@#$%^&*()_
+-={}[]:";''",./?\|
+-->
+               <p>
+				<button id="transliterateA2HButton" onclick="javascript:transliterateA2H();" >&#8633; Transliterate</button> 
+				
+				<label for="hazards" style="background:#e9e9ed; border:1px solid; border-radius:0.2em; padding:2px;">
+					<input type="checkbox" id="hazards" name="hazards" value="yes"> &#9762; Show Hazards?
+				</label>
+				<button id="helpButton" onclick="javascript:toggleHelp();" style="margin-left:0.5em;">⇲ Toggle Help</button> 
+			</p>
+               </fieldset>
+			
+			<fieldset class="someOutputBox" id="help" style="display:block;">
+                    
+				<legend>Help <button onclick="javascript:toggleHelp();" style="margin-left:0.5em;" title="Hide Help">⇲</button> </legend>
+                    <p id="help">
+					Purple: Vowel.<br>
+					Red: Potential conflict (letter changed).<br>
+					Green: Diagraph.<br>
+               </fieldset>
+			
+               <fieldset id="hieOutput" class="someOutputBox" >
+                    <legend>HIE Final Output</legend>
+                    Awaiting input...
+               </fieldset>
+               <fieldset id="aeaOutput" class="someOutputBox">
+                    <legend>AEA Conversion Notes</legend>
+                    Awaiting input...
+               </fieldset>
+
+          <br><br>
+          <a href="ipa_chart.webp" target="_blank"><img src="ipa_chart.webp" style="max-width:100%; cursor: pointer;"></a><br>
+          <a href="https://en.wikipedia.org/wiki/International_Phonetic_Alphabet#Pulmonic_consonants" target="_blank">View on Wiki</a>
+          <div id="rules">
+
+               <h2>Table of Contents</h2>
+               	<ol>
+               		<li><a href="#need">The Need and Solution</a></li>
+               		<li><a href="#current">Current Implementation</a>
+               			<ol>
+               				<li><a href="#repeting">Repeating Letters</a></li>
+               				<li><a href="#vowels">Treatment of Vowels</a></li>
+               				<li><a href="#cutting">Addition, Removal, and Modification of Letters and Digraphs</a></li>
+               				<li><a href="#punctuation">Punctuation and Special Modifiers</a></li>
+               			</ol>
+               		</li>
+               	</ol>
+
+               <hr>
+               <h2><a name="need">The Need and Solution</a></h2>
+               <p>
+               	The English language is a <a href="https://en.wikipedia.org/wiki/English_orthography">
+               	fractured conglomeration </a> that has been mashed together from a wide variety of
+               	disparate languages, <a href="https://en.wikipedia.org/wiki/History_of_English">including though not
+               	limited to German, French, Greek, Latin, and more. The Scandinavians, Normans, &amp; the Dutch influenced
+               	English as well.</a> This has led to massive internal conflicts and a dizzying array of rules and exceptions.
+               	Even life-long native English speakers often have difficulty with some less-than-clear spellings.
+               </p>
+               <p>
+               	HIE was created with three primary aims:
+               </p>
+               <ol>
+                    <li>To clear out as many internal inconsistencies as possible.</li>
+                    <li>To eliminate redundant letters, while bringing forth needed letters.</li>
+                    <li>???  Archaic English ???</li>
+
+               </ol>
+               <h3><a name="hieVsHse">HIE vs HSE</a></h2>
+               <p>
+                    While <cite><a href="https://www.cwholemaniii.com/pages/hss/hse.shtml">Holeman Simplified English</a></cite> is designed for optimizing hand-written notes, and is intended to be simple enough that anyone can
+                    learn it in 15 minutes, <cite>Holeman Improved English</cite> (HIE) focuses on revamping Archaic English from whole cloth, discarding historical cruft,
+                    and streamlining the language with both broad strokes, and minute refinments. HIE does not address the spoken version of the lanuage at this time,
+                    setting its attenion squarely on the inconsistant written form of the language.
+               </p>
+               <h3>Overview</h3>
+               <p>
+               	The 64,000 foot picture of the changes made to Archaic English to create HSE include:
+               </p>
+               <ul>
+               	<li>Numerous redundant letters have been removed. </li>
+                    <li>Numerous missing letters (TH, etc.) have been added. </li>
+                    <li>Each vowel has been split to allow each to correspond to a single sound.</li>
+                    <li>The letters have new forms that correlate to the manner & place where each is derived, as noted in the <span title="International Phonetic Alphabet" style="border-bottom: 1px dotted #000; cursor:pointer;">IPA</span>. </li>
+               	<li>Spellings have been made consistent. Hard and soft sounds: Goat, Jelly, <s>G</s>Jeneric; etc. </li>
+               	<!-- ??? <li>Several existing punctuation marks are borrowed from existing languages (&iquest;, &iexcl;, &laquo;, &raquo;).</li>-->
+               	<li>Several new Glyphs are added. (&Cap;, &LeftTee;, etc.)</li>
+               	<li>Standard existing symbols are often allowed as words.
+               		(3 rather than <i>three</i>, @ rather than <i>at</i>, etc.)</li>
+                    <li>Several new rules exist to streamline</li> <!-- ?????? NEEDED WITH NEW LETTERS??? -->
+               </ul>
+
+               <hr>
+               <h2><a name="need">Current Implementation (1.8)</a></h2>
+               <!-- 2.5 Adds rules for Y/I/E.-->
+               <h3>Repeating Letters</h3>
+               <p>
+               	Rather than writing a letter twice in a row (Feet, Letter, etc.) simply write it once, and underline it, thus: tt = <u>t</u>.
+               	In the case of more than two letter in a row, for an even number, underline 1/2 the original quantity (Hooot = H<u>oo</u>t).
+               	For an odd number, do the same as for an even number, with the final etter not underlined (Yipeee! = Yip<u>e</u>e!).<br>
+               	<b>Non Diagraph:</b> Wood = w<u>o</u>d.<br>
+               	<b>Diagraph:</b> Cooperate = C<u>&ouml;</u>perate. (A diagraph is the junction between two syllables.)<br>
+               </p>
+
+               <hr>
+               <h3>Addition, Removal, and Modification of Letters and Digraphs </h3>
+               <p>
+               	Modern English has a number of diagraphs; multiple letters used to form a single phoneme (sound). HSE strives to
+               	remove each of these.  As of HSE 2.5, six have been removed:
+               </p>
+
+               <h4>Handling C, K, S, &amp; Q.</h4>
+               <p>
+               	The letters C and Q are removed. The Letters <b>C</b> and <b>Q</b> are redundant and only add confusion
+               	to language. Is that <i>scent, cent </i>or <i>sent</i>? What about your questions? Why not cuestions, or
+               	kuestions? The soft "C" is replaced with the now universal "S." Hards become "K", softs become "S".
+               	Both the hard "C" and all uses of the letter "Q" are replaced with the now common "K." Finally, when
+               	replacing the leeter Q, it is usually followed by a "u", such as in <i>question</i>. In these cases, the "u"
+               	is replaced with the letter "w".
+               	<p>
+
+               	<ul>
+                    	<li>Kill = Kill.</li>
+                         <li>Cat = Kat.</li>
+                    	<li>Celery = Selery.</li>
+                    	<li>Queen = Kween.</li>
+                    </ul>
+               </p>
+
+               <h4>The Redundant X</h4>
+               <p>
+               	The letter X always makes one of the 4 following sounds, and is therefore eliminated, and replaced by these letter combinations: <!-- THERE ARE RULES FOR THIS! TODO: ADD THEM! -->
+                    <ol>
+                         <li>KS - six: siks. When the X is followed by a voiceless consonant, or when the words ends in X, it is written "KS".  </li>
+                         <li>GZ - exam: egzam. When the sound following the “x” is voiced AND when the following syllable is stressed it is written "GZ.""</li>
+                         <li>KSH - obnoxious: obnokshious</li>
+                         <li>Z -  xenophile: zenophile. When the word starts with X, </li>
+                    </ol>
+
+               </p>
+
+
+               <h4>The Soft G</h4>
+               <p>
+               	The soft G is replaced in all cases with a <i>J</i>: <br>
+               	Giant = Jiant.<br>
+               	Orange = Oranje.<br>
+               </p>
+
+               <h4>Fixing the Exasperating <i>Y</i></h4>
+               <p>
+               	In Archaic English, the letter <i>Y</i> makes one of <em>four</em> different sounds, depending on its usage.
+               	In HSE, this is reduced to one. In every case where a <i>Y</i> is present, it makes the "yuh" sound, as in
+               	<i>Yes</i>. All other uses of the letter are replaced with whichever letter makes the given sound: <i>I</i>, or <i>E</i>.<br>
+               </p>
+               <ul>
+               	<li>Yam = <em>Y</em>am.<br>
+               	<li>Gym (rhymes with him) = G•m<sup style="cursor: help;" title="All letters transformed: J•m.">1</sup>
+               		(G<em>i</em>m). Uses standard "I".</li>
+               	<li>Fly (rhymes with SciFi) = Fl⊡. Uses the Aiŋ "⊡".</li>
+               	<li>Quickly (rhymes with me) = Quickl↽
+               		<sup style="cursor: help;" title="All letters transformed: Kwikkl↽.">2</sup>. (Quickl<em>e</em>). Uses standard "E".</li>
+               </ul>
+               <h5>The Letter Y as a Consonant and a Vowel</h5>
+               <p>
+               	In HSE <b>The letter <i>Y</i> is a consonant</b>.
+               	In Archaic English the letter <i>Y</i> is sometimes a consonant (Yogurt, Yes), and other times a vowel (Cycle, My). The rule for telling the
+               	two apart in Archaic English is: "The letter <i>Y</i> is a consonant when it is the first letter of a
+               	syllable that has more than one letter. If <i>Y</i> is anywhere else in the syllable, it is
+               	a vowel".
+               </p>
+
+               <h4>Silent Letters</h4>
+               <p>
+               	All silent letters are replaced with The <i>Silence</i>, {-si}. Silences are never repeated/doubled.
+               </p>
+               <ul>
+               	<li>Yacht = Ya{-si}t. </li>
+               	<li>Knight = {-si}ni{-si}t. </li>
+               	<li>Autumn = Autum{-si}. </li>
+               	<li>Folk = fo{-si}k. </li>
+               	<li>Rhyme = R{-si}yme. </li>
+               </ul>
+
+               <hr>
+
+               <div  class="floatNoteBlock">
+               <h3>Combos</h3>
+               	<ul>
+               		<li>CH: {CH}, {ch}.</li> <!-- Cache -->
+               		<li>SH: {SH}, {sh}.</li>
+               		<li>TH: {TH}, {th}.</li><!-- / &thorn; &#566;-->
+               		<li>NG: {NG}, {ing}.</li>
+               		<li>PH = F.</li>
+               		<li>GH = F / {-si}. </li>
+               </ul>
+               </div>
+               <h3>Multi-Letter Combinations</h3>
+
+               <h4>CH : The "Chaw." {CH}, {ch}</h4>
+               <p>
+               	The "CH" combination is eliminated, and replaced with by the Chaw "{CH}", a single "K," or a shaw "{SH}", as appropriate. </p>
+               <ul>
+               	<li>Chase = {CH}ase.</li>
+               	<li>Chaos = Kaos; technical = teknical.</li>
+               	<li>Cache = Ka{sh}e; machine = ma{sh}ine.</li>
+               </ul>
+
+               <h4>SH :  The "Shaw." {SH}, {sh}</h4>
+               <p>
+               	The "SH" combination is eliminated, and replaced with the new Shaw {SH}. <!--[&#643;].--></p>
+               <ul>
+               	<li>Should = {SH}ould.</li>
+               	<li>Flashlight = Fla{sh}light. </li>
+               	<li>Bash = Ba{sh}.</li>
+               </ul>
+
+               <h4>TH:  The ancient Thorn revived. {TH}, {th}</h4>
+               <p>
+               	The "TH" combination is eliminated, and replaced with the Thorn.
+               </p>
+               <ul>
+               	<li>The = {TH}e.</li>
+               	<li>Anthem = An{th}em.</li>
+               	<li>Thirteenth = {TH}irteen{th}.</li>
+               </ul>
+               <p>
+               	The <i>Thorn</i> (Þ) is an ancient part of the English language, reaching  as far back as
+               	Old English, that fell out of use (partly due to a limited number of letter blocks
+               	being available on the early printing press, which you can learn more about
+               	<a href="http://en.wikipedia.org/wiki/Talk:Thorn_%28letter%29">here</a>).
+               	When it was revived for HSE, the traditional symbol used to represent the letter "&thorn;"
+               	was deemed too similar to the letters p and b, particularly in the hand-written
+               	form. Therefore the new symbol was created to represent the old letter.
+               </p>
+
+               <h4>4.0 - NG: The Engma  (Ŋ, ŋ)</h4>
+               <p>
+               	The "ING" combination is eliminated.<br>
+               	Where applicable, <i>ng</i> is replaced with the Engma (ŋ). This is used in cases where the "ng"
+               	makes the standard <i>ng</i> sound; such as "ring" ("riŋ"), or "song" ("soŋ"").
+               	<!-- (note the inclusion of the trailing "g" for the hard "G" sound). ???-->
+
+               	<!-- The Engma does <em>not</em> replace the usage of "ng" where the letters are distict, such as
+               	with <i>gen</i>ious. <br><br> ??? -->
+
+               	"Sing in anger, England" becomes "Siŋ in aŋger, Eŋgland.""<br>
+               </p>
+               <ul>
+               	<li>Going = Goiŋ.</li>
+               	<li>Ingots = Iŋgots.</li>
+               </ul>
+
+               <h4>The PH &amp; GH Combinations</h4>
+               <p>
+               	"PH" and "GH" never make an "F" sound. They are replaced with the appropriate letter. That would be
+               	either an "F," or a Silence ({-si}).
+               	In the case of words such as <i>uphold</i>, or <i>haphazard</i> the separate P & H letters are still used.
+               </p>
+               <ul>
+               	<li>Tough = Touf. </li>
+               	<li>Daughter = dau{-si}ter. </li>
+
+               	<li>Phone = Fone.</li>
+               	<li>Cough = Kouf.</li>
+               	<li>Althou{-si}.</li>
+               </ul>
+
+               <h4>The 'tion &amp; 'sion Combinations</h4>
+               <p>
+
+               	/-ʃən/, (after a preceding “s”) /-tʃən/
+               	tion = ʃ⊐n (shaw, Eeŋ, een.)
+
+
+               	Kwikk kw⊐stʃ⊐n ⊓n
+               	Nation.
+               	Naʃ⊐n
+
+
+               	sion = /ʒən/
+               	Vision = V⊡s⊡⊓n (Vaɪ-saɪən)
+
+               </p>
+               <ul>
+               	<li></li>
+               </ul>
+               <hr><hr><hr>
+               <h3>HIE Alphabet (v 1.8)</h3>
+               <p>
+
+
+               <hr><hr><hr>
+
+               <h3>Hiatus, &amp; Tr&eacute;ma </h3>
+               <p>
+               	A tr&eacute;ma is a horizontal pair of dots over a letter, for example an tr&eacute;ma on
+               	an o looks like this: &ouml;. An tr&eacute;ma is
+               	used in English to indicate a hiatus (a break in the flow of a word). For example, in <i>co&ouml;perate</i> the tr&eacute;ma reminds the
+               	reader that the word has four syllables <i>co-op-er-ate</i>, not three, <i>coop-er-ate</i>. The use of a tr&eacute;ma is <i>highly</i> encouraged wherever applicable. A tr&eacute;ma can also be used in non-vowel situations as
+               	a reminder to the reader that HSE does not use digraphs (ph, etc.) as well as for consistency.
+               </p>
+
+
+
+               <hr>
+               <h3>Treatment of Vowels</h3>
+               <p>
+               	The shape of the vowel letters have been modified in order to make them take up less space, and to make them faster to write.
+               	Capital and lowercase vowels are the same shape, but may be scaled differently.
+               	Multiple vowels, may be strung together, sharing lines-in-common. <!-- TODO: Examples. *** -->
+               </p>
+
+               <h4>Vowel Forms</h4>
+               <ul>
+               	<li>A, a = {A}, {a}.</li>
+               	<li>E, e = {E}, {e}.</li>
+               	<li>I, i = {I}, {i}.</li>
+               	<li>O retains is't original forms.</li>
+               	<li>U retains its form. But u becomes the streamlined {u}.</li>
+               </ul>
+
+               <h4>Vowel Placement</h4>
+               <p>
+               	Generally vowels are moved up and to the left, so that they rest above the consonant immediately preceding them.
+               	In the case of a vowel starting a word, they are left in the same position as a consonant.
+               </p>
+
+               <h4>Example of Proper Vowel Usage</h4>
+               <ul>
+               	<li>Get  = ***.
+               	<li>Above = ***.
+               </ul>
+               <hr>
+
+
+
+               <h3><a id="punctuation">Punctuation Marks</a></h3>
+               <h4>General Punctuation Marks</h4>
+               <p>
+               	For additional clarity, HSEX 4.0 formally recognizes the Interrobang, "‽",  along with utilizing the following unique punctuation marks:
+               </p>
+               <ul>
+               	<li>Positron ⊕ (General Positive Exclamation - excited, etc.)</li>
+               	<li>Negatron ⊝ (General Negative Exclamation - nervous, etc.)</li>
+               	<li>Interrobang ‽ (Exclamatory question)</li>
+               	<li>Barb ⥌ (Sarcasm) </li>
+               	<li>Cloud ߷ (Apology, regret) </li>
+               	<li>Ankh ☥ (Joy, happiness)</li>
+               	<li>Tear ⫯ (Sadness/Grief)</li>
+               	<li>Diamond ⋄ (Joking) </li>
+               	<li>Rage ♮ (Anger)</li>
+               	<li>Tremor ⨔ (Fear)</li>
+               </ul>
+
+               <h4>Context Marks: ⌜ and ⌟</h4>
+               <p>
+               	The Context Marks ⌜ and ⌟ are optional unvoiced undertones. They indicate the manner of speech. They are limited to one word, and are used at the start of a sentence.
+               	<br><br><em>Example:</em> "⌜confused⌟ Go away."
+               	<br><br><em>Example:</em> "⌜decisive⌟ Go away."
+
+               </p>
+
+               <h4>Titles: 《 , 》</h4>
+               <p>
+               	The Title Marks 《 , 》are borrowed from Chinese. They are used to identify a title, newspaper name, file name, opera name, song name, picture name, book name, the name of film and television programs, etc.
+               	<br><br><em>Example:</em> The book, 《The Hobbit》 was written by <cite>J.R.R.Tolkien</cite>.
+               </p>
+               <h4>Certitude Marks: ∵ & ∴</h4>
+               <p>
+               	Uncertanty Marks come in two forms: ∴ (Certainty), and ∵ (Uncertanty). They are unvoiced in reading. They indicate the certainty of the writer.
+               	<br><br><em>Example #1</em> ∴Jon is a liar.∴ This this indicates that the writer/speaker is utterly certain of the fact that Jon tells lies.
+
+               	<br><br><em>Example #2</em> "Jon is a liar." This carries no qualifications or knowledge about writer/speaker's knowledge of Jon's honesty.
+
+               	<br><br><em>Example:3 </em> ∵Joh is a liar.∵ This this indicates that the writer/speaker is doubtful, and the sentence carries little weight.
+               </p>
+
+
+               <h4>
+               	Combined Punctuation Example
+               </h4>
+               <div style="background:ivory; border:solid; border-width:1px; margin-left:4em; margin-right:4em;">
+               	<p>
+               	Jill grinned at him, "⌜flirtatious⌟ Go away⋄"
+               	</p><p>
+               	Jon responded, "I knew you didn't like me⨔ I... I'll go߷"
+               	</p><p>
+               	"Wait⊝ Surely you knew I was kidding‽ ⌜earnest⌟ I love you, Jon! Don't go⫯"
+               	</p><p>
+               	Jon stared at her a moment, then blinked. ∴You toy with my emotions, Jill♮ You know I am <i>so</i> very good at reading other people's emotions that you play your little games with my heart⥌ ⌜loud⌟ No longer⊝∴ Jack stormed out the door.
+               	</p>
+               </div>
+
+
+               <h3>Special Modifier Glyphs</h3>
+
+               <h4>Pluralization & Possessive</h4>
+               <ul>
+               	<li>Plural: &nisd;. (The <i>Plah</i>). <br><em>Example:</em> Boxes = Box&nisd;. Oxen = Ox&nisd;. Geese = Goose&nisd;. Things = Thing&nisd;. 	{<i>Thingplah</i>}</li> <!-- http://www.grammar-monster.com/plurals/plural_of_nemesis.htm -->
+               	<li>Possessive: &Cap;. (The <i>Poh</i>). <br><em>Example:</em> Alexsis' = Alexis&Cap;. John's = John&Cap;. {<i>Johnpoh</i>}</li>
+               </ul>
+               <p>
+               	In the case of both pluralization and possessive, the sequence is pluralization <i>then</i>
+               	possessive: &nisd;, &Cap;.
+               		<!-- <br>Example: &nisd;, &Cap; -->
+               </p>
+
+
+               <h4>Tenses</h4>
+               <ul>
+               	<li>Past Tense: &LeftTee;. Sound, "<i>pah</i>."<br><em>Example:</em>
+               		"I called the store" = "I call&LeftTee; the store." {<i>callpah</i>} </li>
+               	<li>Future Tense: &RightTee; Sound, "<i>fu</i>.<br><em>Example:</em>
+               		"I will call the store" = "I call&RightTee; the store." {<i>callfu</i>} </li>
+               	</ul>
+
+
+               <h4>Gender</h4>
+               <ul>
+               	<li>Male: &male;.
+               		<br><em>Example:</em> "A man ran." = "A &male; ran." </li>
+
+               	<li>Female: &female;.
+               		<br><em>Example:</em> "Three girls." = "Three &female;&nisd;."</li>
+
+               	<li>Unknown Gender: Use {person}. <!-- &#9791; Helpful? -->
+               		<br><em>Example:</em> Some people went to the store. = "Some {people} went to the store. "</li>
+
+               	<li>Male &amp; Female: &#9893;.
+               		<br><em>Example:</em> They went on a date. = "&#9893;&nisd; went on a date."
+               	</li>
+               </ul>
+
+
+
+
+               <h4>Usage of Numbers and Other Punctuation</h4>
+               		<p>
+               				Use of numbers in sentances is considdered ideal, unlike Archaic English. For <br><em>Example:</em>
+               				"I love all 3 of those cars." vs "I love all three of those cars."
+               		</p>
+               <hr>
+
+               <div class="floatNoteBlock">
+               <h3>List of<br>Boxed <br>Commons</h3>
+               	<ul>
+               		<li>A - None.</li>
+               		<li>About = <span class="bc">{B}</span>.</li>
+               		<li>Which = <span class="bc">{CH}</span>.</li>
+               		<li>Down = <span class="bc">D</span>.</li>
+               		<li>Some = <span class="bc">E</span>.</li>
+               		<li>From = <span class="bc">F</span>.</li>
+               		<li>Into = <span class="bc">G</span>.</li>
+               		<li>Have = <span class="bc">H</span>.</li>
+               		<li>I - None.</li>
+               		<li>What = <span class="bc">{ING}</span>.</li>
+               		<li>Were = <span class="bc">J</span>.</li>
+               		<li>Long = <span class="bc">L</span>.</li>
+               		<li>Many = <span class="bc">M</span>.</li>
+               		<li>Make = <span class="bc">N</span>.</li>
+               		<li>Other = <span class="bc">O</span>.</li>
+               		<li>Person = <span class="bc">P</span>.</li>
+               		<li>More = <span class="bc">R</span>.</li>
+               		<li>Said = <span class="bc">S</span>.</li>
+               		<li>Water = <span class="bc">{SH}</span>.</li>
+               		<li> = <span class="bc">{T}</span>.</li>
+               		<li>There = <span class="bc">{TH}</span>.</li> <!-- &DJcy; -->
+               		<li>Would = <span class="bc">U</span>.</li>
+               		<li>What = <span class="bc">V</span>.</li>
+               		<li>Word = <span class="bc">W</span>.</li>
+               		<li>Find = <span class="bc">X</span>.</li>
+               		<li>When = <span class="bc">Y</span>.</li>
+               		<li>Write = <span class="bc">Z</span>.</li>
+
+
+
+
+               		</ul>
+               </div>
+               <h3>Boxed Commons</h3>
+               <h4>General Explanation</h4>
+               <p>
+                    In a further effort to reduce the physical size of written texts, each letter has been assigned to a
+                    letter-word pair. By placing a letter (or consecutive letters) in a box -always in the uppercase form-
+                    whole words can be reduced to a single character width. Thus, "About" (5 letters) becomes B, "Could"
+                    becomes K, and "Time" becomes T. Several Boxed Commons may be included in a single box. Thus: Ãƒâ€šÃ‚Â¡BT!
+                    holds the same meaning as "About time!" Punctuation marks are placed outside of boxings, but special
+                    modifiers may be placed inside a boxing if it would otherwise require two boxes.
+               </p>
+               <p>
+                    The letters "A" and "I" each hold a standalone meaning already, and were therefor not included in
+                    the set of Boxed Commons. They may be included inside a boxing.
+               </p>
+               <p>
+               	Boxed commons can be written on a computer by enclosing the captiol letter in square brackets "[" & "]".  Such as "[B][T]!" (About time!).
+               </p>
+
+
+               <h4>Example</h4>
+               <OL>
+                      <li><p>Archaic English:</p>
+                      <OL TYPE=a>
+                              <li><p>That about which people said
+                              could become other than it was would, in time, find themselves
+                              wrong.</p>
+                      </OL>
+                      <li><p>HSE without boxing:</p>
+                      <OL TYPE=a>
+                              <li><p>**<SUP>a</SUP>t ab<SUP>ou</SUP>t
+                              wh<SUP>i</SUP>**<SUP>e</SUP> p<SUP>e</SUP>rs<SUP>o</SUP>** s<SUP>ai</SUP>d
+                              k<SUP>ou</SUP>ld b<SUP>e</SUP>k<SUP>o</SUP>m<SUP>e</SUP> o**<SUP>e</SUP>r
+                              **<SUP>a</SUP>n it w<SUP>a</SUP>s w<SUP>ou</SUP>ld, in t<SUP>i</SUP>m<SUP>e</SUP>,
+                              f<SUP>i</SUP>nd, **<SUP>e</SUP>ms<SUP>e</SUP>** wr<SUP>o</SUP>ng.</p>
+                      </OL>
+                      <li><p>English with Boxing:</p>
+                      <OL TYPE=a>
+                              <li><p>That BP**SK become O than it was
+                              W, in T, X themselves wrong.</p>
+                      </OL>
+                      <li><p><A NAME="_GoBack"></A>Full HSE
+                      with boxig:</p>
+                      <OL TYPE=a>
+                              <li><p>**<SUP>a</SUP>t BP**Â­SK b<SUP>e</SUP>k<SUP>o</SUP>m<SUP>e</SUP>
+                              O **<SUP>a</SUP>n it w<SUP>a</SUP>s W, in T, X, **<SUP>e</SUP>ms<SUP>e</SUP>lfÃƒï¿½Ã‚Â­
+                              wr<SUP>o</SUP>ng.</p>
+                      </OL>
+               </OL>
+
+               <h3  >Methodology of Selection</h4>
+                      <p>
+                              The words that were selected for
+                              inclusion as Boxed Commons were pulled from the most commonly used
+                              words (as shown in Oxford <EM>English</EM> Corpus) in the English
+                              language that were four or more characters long after converting to
+                              HSE. For example, "have" is the 9<SUP>th</SUP> most commonly used
+                              word, and was therefore included. However, "that" is the 8<SUP>th</SUP>
+                              most commonly used word, but was not included as a Boxed Common as it
+                              is only three characters long (**<SUP>a</SUP>t) when written in HSE.
+                      </p>
+          </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		</div>
+          <div class="box">
+               <h2>Conversion Tables</h2>
+
+               <table id="alphabets">
+                    <tr>
+                         <th title="Holeman Improved English Alphabet">HIEA</th>
+                         <th title="Archaic English Alphabet">AEA</th>
+                         <th title="Name">Name</th><th title="International Phonetic Alphabet">IPA</th>
+                         <th>Method</th>
+                         <th>Sample</th>
+                         <th>Listen</th></tr>
+                    <tr><th colspan="7">Vowels</th></tr>
+                    <tr><td><img class="letter" src="letters/a_.webp"> , <img class="letter" src="letters/a.webp"> </td>	<td>a</td>     <td>Ay</td>   			<td>eɪ</td>	<td>a</td>	<td>Say</td>				<td><audio controls  id="a"><source src="listen/a.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/a`_.webp">, <img class="letter" src="letters/a`.webp"></td>	<td>a</td>     <td>Alŋ (Alng)</td> 	<td>æ</td>	<td>a`</td>	<td>Cat</td>				<td><audio controls  id="a`"><source src="listen/a`.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/a~_.webp">, <img class="letter" src="letters/a~.webp"></td>	<td>a</td>     <td>Awŋ (Awng)</td>		<td>ɑ,ɔ,ə</td>	<td>a~</td>	<td>Father, Daughter</td>	<td><audio controls  id="a~"><source src="listen/a~.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/e_.webp"> , <img class="letter" src="letters/e.webp"> </td>	<td>e</td>     <td>Ee</td>   			<td>i</td>	<td>e</td>	<td>See</td>				<td><audio controls  id="e"><source src="listen/e.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/e`_.webp">, <img class="letter" src="letters/e`.webp"></td>	<td>e</td>     <td>Eeŋ (Eeng)</td>  	<td>ɛ</td>	<td>e`</td>	<td>Red</td>				<td><audio controls  id="e`"><source src="listen/e`.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/i_.webp"> , <img class="letter" src="letters/i.webp"> </td>	<td>i</td>     <td>I</td>    			<td>aɪ</td>	<td>i</td>	<td>I, My</td>				<td><audio controls  id="i"><source src="listen/i.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/i`_.webp">, <img class="letter" src="letters/i`.webp"></td>	<td>i</td>     <td>iyŋ (Iyng)</td>  	<td>ɪ</td>	<td>i`</td>	<td>Fish</td>				<td><audio controls  id="i`"><source src="listen/i`.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/o_.webp"> , <img class="letter" src="letters/o.webp"> </td>	<td>o</td>     <td>Oh</td>   			<td>oʊ</td>	<td>o</td>	<td>Go</td>				<td><audio controls  id="o"><source src="listen/o.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/o`_.webp">, <img class="letter" src="letters/o`.webp"></td>	<td>o</td>     <td>Oŋ (Ohng)</td>   	<td>ʊ</td>	<td>o`</td>	<td>Look</td>				<td><audio controls  id="o`"><source src="listen/o`.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/u_.webp"> , <img class="letter" src="letters/u.webp"> </td>	<td>u</td>     <td>Yu</td>   			<td>u</td>	<td>u</td>	<td>Zoo</td>				<td><audio controls  id="u"><source src="listen/u.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/u`_.webp">, <img class="letter" src="letters/u`.webp"></td>	<td>u</td>     <td>Yuŋ (Yung)</td>  	<td>ʌ</td>	<td>u`</td>	<td>Cup</td>				<td><audio controls  id="u`"><source src="listen/u`.ogg"></audio></td></tr>
+                    <tr><th colspan="7">Consonants</th></tr>
+                    <tr><td><img class="letter" src="letters/b_.webp">, <img class="letter" src="letters/b.webp"> </td>		<td>b</td>     <td>Bee</td>		<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/d_.webp">, <img class="letter" src="letters/d.webp"> </td>		<td>d</td>     <td>Dee</td>		<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/f_.webp">, <img class="letter" src="letters/f.webp"> </td>		<td>f</td>     <td>Eff</td>		<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/g_.webp">, <img class="letter" src="letters/g.webp"> </td>		<td>g</td>     <td>Gee</td>		<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/h_.webp">, <img class="letter" src="letters/h.webp"> </td>		<td>h</td>     <td>Haitch</td>	<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/j_.webp">, <img class="letter" src="letters/j.webp"> </td>		<td>j</td>     <td>Jay</td>		<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/k_.webp">, <img class="letter" src="letters/k.webp"> </td>		<td>k</td>     <td>Kay</td>		<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/l_.webp">, <img class="letter" src="letters/l.webp"> </td>		<td>l</td>     <td>Ell</td>		<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/m_.webp">, <img class="letter" src="letters/m.webp"> </td>		<td>m</td>     <td>Em</td>		<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/n_.webp">, <img class="letter" src="letters/n.webp"> </td>		<td>n</td>     <td>En</td>		<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/p_.webp">, <img class="letter" src="letters/p.webp"> </td>		<td>p</td>     <td>Pee</td>		<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/r_.webp">, <img class="letter" src="letters/r.webp"> </td>		<td>r</td>     <td>Ar</td>		<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/s_.webp">, <img class="letter" src="letters/s.webp"> </td>		<td>s</td>     <td>Ess</td>		<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/t_.webp">, <img class="letter" src="letters/t.webp"> </td>		<td>t</td>     <td>Tee</td>		<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/v_.webp">, <img class="letter" src="letters/v.webp"> </td>		<td>v</td>     <td>Vee</td>		<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/w_.webp">, <img class="letter" src="letters/w.webp"> </td>		<td>w</td>     <td>Double-U</td>	<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/y_.webp">, <img class="letter" src="letters/y.webp"> </td>		<td>y</td>     <td>Wy</td>		<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/z_.webp">, <img class="letter" src="letters/z.webp"> </td>		<td>z</td>     <td>Zed</td>		<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/ch_.webp">, <img class="letter" src="letters/ch.webp"></td>		<td>ch</td>    <td><img class="letter" src="letters/ch.webp">a (cha)</td>		<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/sh_.webp">, <img class="letter" src="letters/sh.webp"></td>		<td>sh</td>    <td><img class="letter" src="letters/sh.webp">a (sha)</td>		<td></td>		<td></td>		<td></td>					<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/th_.webp">, <img class="letter" src="letters/th.webp"></td>	     <td>th</td>    <td><img class="letter" src="letters/th.webp">orn (thorn)</td>		<td></td>		<td></td>		<td></td>			<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+                    <tr><td><img class="letter" src="letters/ng_.webp">, <img class="letter" src="letters/ng.webp"></td> 	<td>ng</td>    <td>Eŋma (Engma)</td>		<td></td>		<td></td>		<td></td>			<td><audio controls ><source src="listen/.ogg"></audio></td></tr>
+               </table>
+
+                <br><br><a href="hiea_table.webp" target="_blank"><img src="hiea_table.webp" style="max-width:100%;"></a>
+          </div>
+     </body>
+</html>
