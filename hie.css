@@ -1,0 +1,85 @@
+/* 
+	C.W.Holeman III
+	October 2021
+*/
+
+textarea{
+	clear:both;
+	width: 100%;
+	height: 12em;
+	background: ivory;
+	overflow:hidden;
+	}
+.someOutputBox{
+	background: ivory;
+	float:left;
+	clear: both;
+	padding: 1em;
+	width: 92%;
+	margin-top: 1em;
+	margin-bottom: 1em;
+	}
+#hieOutput{
+	font-weight: bold;
+	
+	}
+
+.innerOutput {
+	border-top: solid 1px;
+	padding-top: 1em;
+	}
+
+
+.letter{
+	height: .9em;
+	max-width: 1em;
+	margin: 0;
+	padding: 0;
+	}
+
+legend{
+	font-size: large;
+	font-weight: bold;
+	background: tan;
+	padding: .25em;
+	border: solid 1px;
+	}
+fieldset{
+	}
+
+
+#alphabets, th, td {
+	border: solid 1px;
+	border-collapse: collapse;
+	padding: 3px;
+	}
+#alphabets{
+	float:left;
+	width:100%;
+	}
+
+tr:nth-child(even) {
+	background-color: ivory;
+	}
+tr:nth-child(odd) {
+	background-color: tan;
+	}
+audio { width: 3em; }
+
+.boxWide{
+	width: 95%;
+	border:solid 1px;
+	float:left;
+	padding: 1em;
+	background: orange;
+	}
+.box{
+	width: 46%;
+	border:solid 1px;
+	float:left;
+	padding: 1em;
+	background: orange;
+	}
+#aeaOutput{
+	display: none;
+	}

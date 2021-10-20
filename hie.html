@@ -2,89 +2,9 @@
 <html>
      <head>
           <meta charset="UTF-8">
-          <title> Prototype </title>
+          <title> HIE Prototype </title>
           <script src="hie_converter.js"></script>
-          <style>
-          textarea{
-               clear:both;
-               width: 100%;
-               height: 12em;
-               background: ivory;
-               overflow:hidden;
-               }
-          .someOutputBox{
-               background: ivory;
-               float:left;
-               clear: both;
-               padding: 1em;
-               width: 92%;
-               margin-top: 2em;
-               }
-          #hieOutput{
-               font-weight: bold;
-			margin-bottom: 2em;
-               }
-
-          .innerOutput {
-               border-top: solid 1px;
-               padding-top: 1em;
-               }
-
-          
-          .letter{
-               height: .9em;
-               max-width: 1em;
-               margin: 0;
-               padding: 0;
-               }
-
-          legend{
-               font-size: large;
-               font-weight: bold;
-               background: tan;
-               padding: .25em;
-               border: solid 1px;
-               }
-          fieldset{
-               }
-
-
-          #alphabets, th, td {
-               border: solid 1px;
-               border-collapse: collapse;
-               padding: 3px;
-               }
-          #alphabets{
-               float:left;
-               width:100%;
-               }
-
-          tr:nth-child(even) {
-               background-color: ivory;
-               }
-          tr:nth-child(odd) {
-               background-color: tan;
-               }
-          audio { width: 3em; }
-
-          .boxWide{
-               width: 95%;
-               border:solid 1px;
-               float:left;
-               padding: 1em;
-               background: orange;
-               }
-          .box{
-               width: 46%;
-               border:solid 1px;
-               float:left;
-               padding: 1em;
-               background: orange;
-               }
-		#aeaOutput{
-			display: none;
-			}
-          </style>
+          <link rel="stylesheet" href="hie.css">
      </head>
      <body>
 
@@ -97,22 +17,8 @@
 		<div class="box">
 			
                <h2>A2H Transliterator</h2>
-<textarea id="aeaInput" oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"'>
-	Ww, Rr, Tt, Yy, Pp
-	Ss, Dd, Ff, Gg, Hh, Jj, Kk, Ll
-	Zz, Vv, Bb, Nn, Mm
-
-	--
-	Chch,  SHsh, THth, NGng PHph
-	--
-	aa`a~, ee`, ii`, oo`, uu`
-	AA`A~, EE`, II`, OO`, UU`
-	--
-	Ss Cc Qq Xx
-	--
-	
-</textarea>
-<!--			FULL TEST SET:
+			<!--<div contenteditable ! -->
+			<textarea id="aeaInput" onInput='this.style.height = "";this.style.height = this.scrollHeight + "px"'> 
 Ww, Rr, Tt, Yy, Pp
 Ss, Dd, Ff, Gg, Hh, Jj, Kk, Ll
 Zz, Vv, Bb, Nn, Mm
@@ -122,12 +28,26 @@ Chch,  SHsh, THth, NGng PHph
 --
 aa`a~, ee`, ii`, oo`, uu`
 AA`A~, EE`, II`, OO`, UU`
+--
+Ss Cc Qq Xx
+--
+			</textarea>
+			<!--			FULL TEST SET:
+			Ww, Rr, Tt, Yy, Pp
+			Ss, Dd, Ff, Gg, Hh, Jj, Kk, Ll
+			Zz, Vv, Bb, Nn, Mm
 
-------
-0123456789
-~!@#$%^&*()_
--={}[]:";''",./?\|
--->
+			--
+			Chch,  SHsh, THth, NGng PHph
+			--
+			aa`a~, ee`, ii`, oo`, uu`
+			AA`A~, EE`, II`, OO`, UU`
+
+			------
+			0123456789
+			~!@#$%^&*()_
+			-={}[]:";''",./?\|
+			-->
                <p>
 				<button id="transliterateA2HButton" onclick="javascript:transliterateA2H();" >&#8633; Transliterate</button> 
 				
@@ -136,15 +56,6 @@ AA`A~, EE`, II`, OO`, UU`
 				</label>
 				<button id="helpButton" onclick="javascript:toggleHelp();" style="margin-left:0.5em;">⇲ Toggle Help</button> 
 			</p>
-               </fieldset>
-			
-			<fieldset class="someOutputBox" id="help" style="display:block;">
-                    
-				<legend>Help <button onclick="javascript:toggleHelp();" style="margin-left:0.5em;" title="Hide Help">⇲</button> </legend>
-                    <p id="help">
-					Purple: Vowel.<br>
-					Red: Potential conflict (letter changed).<br>
-					Green: Diagraph.<br>
                </fieldset>
 			
                <fieldset id="hieOutput" class="someOutputBox" >
@@ -156,6 +67,14 @@ AA`A~, EE`, II`, OO`, UU`
                     Awaiting input...
                </fieldset>
 
+			<fieldset class="someOutputBox" id="help" style="display:block;">
+				<legend>Help <button onclick="javascript:toggleHelp();" style="margin-left:0.5em;" title="Hide Help">⇲</button> </legend>
+                    <p id="help">
+					Purple: Vowel.<br>
+					Red: Potential conflict (letter changed).<br>
+					Green: Diagraph.<br>
+               </fieldset>
+			
           <br><br>
           <a href="ipa_chart.webp" target="_blank"><img src="ipa_chart.webp" style="max-width:100%; cursor: pointer;"></a><br>
           <a href="https://en.wikipedia.org/wiki/International_Phonetic_Alphabet#Pulmonic_consonants" target="_blank">View on Wiki</a>

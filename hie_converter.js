@@ -19,7 +19,7 @@ var hazard = "";
 
 function toggleHelp(){
 	console.log("toggleHelp::v2");
-	console.log(document.getElementById("help").style.display );
+	console.log(document.getElementById("help").style.display);
 	
 	if(document.getElementById("help").style.display == "block"){
 		document.getElementById("help").style.display = "none";
